@@ -1,0 +1,6 @@
+# Ignore environmental variable files
+.env-1
+.env-2
+
+# Ignore Python virtual environment
+.venv
