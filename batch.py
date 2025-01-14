@@ -51,7 +51,7 @@ def main():
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
     # DEPLOYMENT_NAME, OPENAI_API_VERSION, and AZURE_OPENAI_ENDPOINT
     try:
-        load_dotenv('.env-1')
+        load_dotenv('.env')
     except Exception as e:
         logging.error(
             'Failed to load environmental variables: ', exc_info=True)
