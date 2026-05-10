@@ -2,14 +2,14 @@ import logging
 import sys
 import os
 import json
+from openai import OpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
 from dotenv import load_dotenv
 
 import time
 import datetime
 
-## This function sets up logging
+## This function sets up logging in a custom format
 ##
 def configure_logging(level="ERROR"):
     try:
@@ -39,7 +39,8 @@ def authenticate_with_service_principal(scope):
         logging.error('Failed to obtain access token: ', exc_info=True)
         sys.exit(1)
 
-
+## Main function
+##
 def main():
     # Setup logging
     #
@@ -47,9 +48,9 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # LLM_DEPLOYMENT_NAME, OPENAI_API_VERSION, and AZURE_OPENAI_ENDPOINT
+    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
     try:
-        load_dotenv('.env')
+        load_dotenv('.env', override=True)
     except Exception as e:
         logging.error(
             'Failed to load environmental variables: ', exc_info=True)
@@ -58,17 +59,17 @@ def main():
     # Obtain an access token
     #
     token_provider = authenticate_with_service_principal(
-        scope="https://cognitiveservices.azure.com/.default")
+        scope="https://ai.azure.com/.default")
 
     # Perform a batch ChatCompletion
     #
     try:
         # Create the Azure OpenAI Service client
-        # The client must have a batch endpoint configured and it must match the column in the sample.jsonl file
-        client = AzureOpenAI(
-          api_version=os.getenv('OPENAI_API_VERSION'),
-            azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
-            azure_ad_token_provider=token_provider
+        # The deployment referenced in the file you are uploading should match a batch deployment in the
+        # Foundry service
+        client = OpenAI(
+            base_url=os.getenv("OPENAI_BASE_URL"),
+            api_key=token_provider
         )
 
         # Upload the batch file to the Azure OpenAI Service

@@ -1,15 +1,16 @@
 import logging
 import sys
 import os
+import json
+from openai import OpenAI
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
 from dotenv import load_dotenv
 
 import time
 import datetime
 
-# This function sets up logging
-#
+## This function sets up logging in a custom format
+##
 def configure_logging(level="ERROR"):
     try:
         # Convert the level string to uppercase so it matches what the logging library expects
@@ -25,8 +26,8 @@ def configure_logging(level="ERROR"):
         print(f"Failed to set up logging: {e}", file=sys.stderr)
         sys.exit(1)
 
-# This function obtains an access token from Entra ID using a service principal with a client id and client secret
-#
+## This function obtains an access token from Entra ID using a service principal with a client id and client secret
+##
 def authenticate_with_service_principal(scope):
     try:
         token_provider = get_bearer_token_provider(
@@ -38,6 +39,8 @@ def authenticate_with_service_principal(scope):
         logging.error('Failed to obtain access token: ', exc_info=True)
         sys.exit(1)
 
+## Main function
+##
 def main():
     # Setup logging
     #
@@ -45,54 +48,44 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # LLM_DEPLOYMENT_NAME, OPENAI_API_VERSION, AZURE_OPENAI_ENDPOINT, EMBEDDING_DEPLOYMENT_NAME,
-    # AZURE_AI_SEARCH_ENDPOINT, AZURE_AI_SEARCH_INDEX_NAME, and AZURE_AI_SEARCH_SEMANTIC_CONFIG_NAME
+    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
     try:
-        load_dotenv('.env')
+        load_dotenv('.env', override=True)
     except Exception as e:
         logging.error(
             'Failed to load environmental variables: ', exc_info=True)
         sys.exit(1)
 
     # Obtain an access token
-    ##
+    #
     token_provider = authenticate_with_service_principal(
-        scope="https://cognitiveservices.azure.com/.default")
+        scope="https://ai.azure.com/.default")
 
-    # Perform a batch ChatCompletion
-    ##
+    # Submit an inference to the Responses API
+    #
     try:
         # Create the Azure OpenAI Service client
-        #
-        client = AzureOpenAI(
-          api_version=os.getenv('OPENAI_API_VERSION'),
-            azure_endpoint=os.getenv('AZURE_OPENAI_ENDPOINT'),
-            azure_ad_token_provider=token_provider
+        # 
+        client = OpenAI(
+            base_url=os.getenv("OPENAI_BASE_URL"),
+            api_key=token_provider
         )
 
-        response = client.chat.completions.create(
-            ## Model must be a multimodal model
-            model=os.getenv('LLM_DEPLOYMENT_NAME'),
+        completion = client.chat.completions.create(
+            model=os.getenv("DEPLOYMENT_NAME"),
             messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "Describe the image"
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": "{{SOME_PUBLIC_URL}}"}
-                        }
-                    ]
-                }
-            ],
-            max_tokens=100         
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "What is the capital of Sweden?"}
+            ]
         )
-        print(response.choices[0].message.content)
+
+        print(completion.choices[0].message.content)
+
+        # Uncomment this to see the raw responses formatted in a way that is actually readable
+        #print(completion.model_dump_json(indent=2))
+
     except:
-        logging.error('Failed chat completion: ', exc_info=True)
+        logging.error('Failed batch chat completion: ', exc_info=True)
 
 if __name__ == "__main__":
     main()
