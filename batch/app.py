@@ -48,7 +48,7 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
+    # FOUNDRY_MODEL_ENDPOINT, and DEPLOYMENT_NAME.
     try:
         load_dotenv('.env', override=True)
     except Exception as e:
@@ -68,7 +68,7 @@ def main():
         # The deployment referenced in the file you are uploading should match a batch deployment in the
         # Foundry service
         client = OpenAI(
-            base_url=os.getenv("OPENAI_BASE_URL"),
+            base_url=os.getenv("FOUNDRY_MODEL_ENDPOINT"),
             api_key=token_provider
         )
 

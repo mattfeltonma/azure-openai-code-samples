@@ -48,7 +48,7 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
+    # FOUNDRY_MODEL_ENDPOINT, and DEPLOYMENT_NAME.
     try:
         load_dotenv('.env', override=True)
     except Exception as e:
@@ -67,7 +67,7 @@ def main():
         # Create the Azure OpenAI Service client
         # 
         client = OpenAI(
-            base_url=os.getenv("OPENAI_BASE_URL"),
+            base_url=os.getenv("FOUNDRY_MODEL_ENDPOINT"),
             api_key=token_provider
         )
 
@@ -104,6 +104,7 @@ def main():
                     - Provide accurate, well-grounded responses based on official documentation
                     - If the learn tool is unavailable or returns no results, clearly state: "I cannot answer this question at this time as I'm unable to access the documentation"
                     - Keep responses concise and relevant to Azure
+                    - At the end of the response include citations with links back to the Learn documentation given the responses you got from the tool. For example: "Sources: [1](link), [2](link)"
 
                     If a question is outside the scope of Microsoft Azure, politely redirect the user."""
                 },
@@ -121,9 +122,6 @@ def main():
         #     print(first_response.reasoning.effort)
         print(first_response.output_text)
         response_id = first_response.id
-
-        # Uncomment this to see the raw responses formatted in a way that is actually readable
-        #print(first_response.model_dump_json(indent=2))
 
         # Use the prior response id as context for a follow up question
         follow_up_response = client.responses.create(

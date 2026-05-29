@@ -48,7 +48,7 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
+    # FOUNDRY_MODEL_ENDPOINT, and DEPLOYMENT_NAME.
     try:
         load_dotenv('.env', override=True)
     except Exception as e:
@@ -67,19 +67,21 @@ def main():
         # Create the Azure OpenAI Service client
         # 
         client = OpenAI(
-            base_url=os.getenv("OPENAI_BASE_URL"),
+            base_url=os.getenv("FOUNDRY_MODEL_ENDPOINT"),
             api_key=token_provider
         )
+
+        prompt = "What is the capital of Sweden?"
 
         completion = client.chat.completions.create(
             model=os.getenv("DEPLOYMENT_NAME"),
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "What is the capital of Sweden?"}
+                {"role": "user", "content": prompt}
             ]
         )
-
-        print(completion.choices[0].message.content)
+        print(f"User: {prompt}")
+        print(f"Assistant: {completion.choices[0].message.content}")
 
         # Uncomment this to see the raw responses formatted in a way that is actually readable
         #print(completion.model_dump_json(indent=2))

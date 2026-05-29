@@ -48,7 +48,7 @@ def main():
 
     # Use dotenv library to load environmental variables from .env file.
     # The variables loaded include AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID
-    # OPENAI_BASE_URL, and DEPLOYMENT_NAME.
+    # FOUNDRY_MODEL_ENDPOINT, and DEPLOYMENT_NAME.
     try:
         load_dotenv('.env', override=True)
     except Exception as e:
@@ -67,9 +67,11 @@ def main():
         # Create the Azure OpenAI Service client
         # 
         client = OpenAI(
-            base_url=os.getenv("OPENAI_BASE_URL"),
+            base_url=os.getenv("FOUNDRY_MODEL_ENDPOINT"),
             api_key=token_provider
         )
+
+        first_question = "What is the capital of Sweden?"
 
         first_response = client.responses.create(
             model=os.getenv("DEPLOYMENT_NAME"),
@@ -82,29 +84,33 @@ def main():
                 },
                 {
                     "role": "user",
-                    "content": "What is the capital of Sweden"
+                    "content": first_question
                 }
             ]
         )
 
-        print(first_response.output_text)
+        print(f"User: {first_question}")
+        print(f"Assistant: {first_response.output_text}")
         response_id = first_response.id
 
-        # Uncomment this to see the raw responses formatted in a way that is actually readable
-        #print(first_response.model_dump_json(indent=2))
+
 
         # Use the prior response id as context for a follow up question
+        follow_up_question = "What is the population?"
+
         follow_up_response = client.responses.create(
             model=os.getenv("DEPLOYMENT_NAME"),
             input=[
                 {
                     "role": "user",
-                    "content": "What is the population of Sweden?"
+                    "content": follow_up_question
                 }
             ],
             previous_response_id=response_id
         )
-        print(follow_up_response.output_text)
+  
+        print(f"User: {follow_up_question}")
+        print(f"Assistant: {follow_up_response.output_text}")
 
     except:
         logging.error('Failed batch chat completion: ', exc_info=True)
